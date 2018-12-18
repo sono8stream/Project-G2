@@ -7,33 +7,20 @@ using UnityEngine;
 /// マップデータは上から下に書き込まれている
 /// </summary>
 
-public class WolfMapImporter : MonoBehaviour
+public class WolfMapImporter
 {
-    [SerializeField]
-    TextAsset rawdata;
-
-    private void Start()
-    {
-        ExportMapdata(rawdata);
-    }
-
-    Texture2D RenderMap(int[,][] mapdata)
-    {
-        return null;
-    }
-
     /// <summary>
     /// 
     /// </summary>
     /// <param name="mapdata">mapdata.bytes</param>
     /// <returns>int[mapHeight,mapWidth][layerCnt(3)]</returns>
-    int[,][] ExportMapdata(TextAsset rawdata)
+    public int[,][] ExportMapData(TextAsset rawData)
     {
-        Debug.Log(rawdata.bytes.Length);
-        byte[] bytes = rawdata.bytes;
+        Debug.Log(rawData.bytes.Length);
+        byte[] bytes = rawData.bytes;
 
-        int mapWidth = IntFromBynary(bytes, 38);
-        int mapHeight = IntFromBynary(bytes, 42);
+        int mapWidth = IntFromBytes(bytes, 38);
+        int mapHeight = IntFromBytes(bytes, 42);
         long mapSize = mapWidth * mapHeight;
         var mapdata = new int[mapHeight, mapWidth][];
         long offset = 50;
@@ -43,24 +30,26 @@ public class WolfMapImporter : MonoBehaviour
             for (int h = 0; h < mapHeight; h++)
             {
                 mapdata[h, w] = new int[3];
-                for (int i = 0; i < 3; i++)
+                for (int l = 0; l < 3; l++)
                 {
-                    long tempoffset = offset + mapSize * i;
-                    mapdata[h, w][i] = IntFromBynary(bytes, tempoffset);
+                    long tempOffset = offset + mapSize * l * 4;
+
+                    mapdata[h, w][l] = IntFromBytes(bytes, tempOffset);
                 }
+                offset += 4;
             }
         }
 
-        Debug.Log(mapWidth+" "+mapHeight);
+        Debug.Log(mapWidth + " " + mapHeight);
         return mapdata;
     }
 
-    int IntFromBynary(byte[] data, long offset, bool littleEndian = true)
+    int IntFromBytes(byte[] data, long offset, bool littleEndian = true)
     {
         if (data.Length <= offset + 4) return 0;
 
         int val = 0;
-        for(int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++)
         {
             val += data[offset + i] << (i * 8);
         }

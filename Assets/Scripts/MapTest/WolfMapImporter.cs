@@ -16,11 +16,10 @@ public class WolfMapImporter
     /// <returns>int[mapHeight,mapWidth][layerCnt(3)]</returns>
     public int[,][] ExportMapData(TextAsset rawData)
     {
-        Debug.Log(rawData.bytes.Length);
         byte[] bytes = rawData.bytes;
 
-        int mapWidth = IntFromBytes(bytes, 38);
-        int mapHeight = IntFromBytes(bytes, 42);
+        int mapWidth = ByteHelper.IntFromBytes(bytes, 38);
+        int mapHeight = ByteHelper.IntFromBytes(bytes, 42);
         long mapSize = mapWidth * mapHeight;
         var mapdata = new int[mapHeight, mapWidth][];
         long offset = 50;
@@ -34,7 +33,7 @@ public class WolfMapImporter
                 {
                     long tempOffset = offset + mapSize * l * 4;
 
-                    mapdata[h, w][l] = IntFromBytes(bytes, tempOffset);
+                    mapdata[h, w][l] = ByteHelper.IntFromBytes(bytes, tempOffset);
                 }
                 offset += 4;
             }
@@ -42,17 +41,5 @@ public class WolfMapImporter
 
         Debug.Log(mapWidth + " " + mapHeight);
         return mapdata;
-    }
-
-    int IntFromBytes(byte[] data, long offset, bool littleEndian = true)
-    {
-        if (data.Length <= offset + 4) return 0;
-
-        int val = 0;
-        for (int i = 0; i < 4; i++)
-        {
-            val += data[offset + i] << (i * 8);
-        }
-        return val;
     }
 }

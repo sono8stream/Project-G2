@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,12 +11,13 @@ using UnityEngine;
 /// 0x0F: タイル設定名の文字数+1(4byte リトルエンディアン)
 /// 0x13~: タイル設定名
 /// 00
+/// ベースマップチップのパス名の文字数+1
+/// ベースマップチップのパス
 /// [
 /// オートタイルへのパス名の文字数+1(4byte リトルエンディアン)
 /// オートタイルへのパス 00 ...
 /// ]
-/// が16回繰り返される
-/// 最初のオートタイルは編集不可だが、データ上は01 00 00 00 00と必ず書き込まれる
+/// の15回繰り返し
 /// FF タイル数(4byte リトルエンディアン)
 /// タイル数分タグ番号設定(タイル数*1byte)
 /// FF タイル数
@@ -45,15 +48,60 @@ using UnityEngine;
 /// 
 /// </summary>
 
-public class WolfTileImporter : MonoBehaviour {
+public class WolfTileImporter
+{
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    // Use this for initialization
+    void Start() {
+
+    }
+
+    // Update is called once per frame
+    void Update() {
+
+    }
+
+    public int[] ExportTileData(TextAsset rawData,
+        out Texture2D mapChip,out List<Texture2D> autoChipList)
+    {
+        byte[] bytes = rawData.bytes;
+        Encoding encoding = Encoding.GetEncoding("Shift_JIS");
+
+        int offset = 15;
+        int nameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
+        offset += 4;
+        string tileName = encoding.GetString(
+            ByteHelper.GetBytesRange(bytes, offset, nameLength));
+        Debug.Log(tileName);
+        offset += nameLength + 1;
+
+        int chipNameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
+        offset += 4;
+        string chipPath = encoding.GetString(
+            ByteHelper.GetBytesRange(bytes, offset, chipNameLength));
+        chipPath = chipPath.Replace(".png", "");
+        mapChip = Resources.Load<Texture2D>(chipPath);
+        Debug.Log(chipPath);
+        offset += chipNameLength + 1;
+
+        autoChipList = new List<Texture2D>();
+        for (int i = 0; i < 15; i++)// Read auto chips
+        {
+            int autoNameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
+            offset += 4;
+            if (autoNameLength > 0)
+            {
+                string autoPath = encoding.GetString(
+                    ByteHelper.GetBytesRange(bytes, offset, autoNameLength));
+                autoPath = autoPath.Replace(".png", "");
+                autoChipList.Add(Resources.Load<Texture2D>(autoPath));
+                Debug.Log(autoNameLength);
+                Debug.Log(autoPath);
+            }
+            offset += autoNameLength + 1;
+        }
+
+        return null;
+        //var tileData = new int[][];
+    }
 }

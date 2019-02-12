@@ -7,39 +7,43 @@ using UnityEngine;
 /// マップデータは上から下に書き込まれている
 /// </summary>
 
-public class WolfMapImporter
+namespace UniWolf
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="mapdata">mapdata.bytes</param>
-    /// <returns>int[mapHeight,mapWidth][layerCnt(3)]</returns>
-    public int[,][] ExportMapData(TextAsset rawData)
+    public class WolfMapImporter
     {
-        byte[] bytes = rawData.bytes;
-
-        int mapWidth = ByteHelper.IntFromBytes(bytes, 38);
-        int mapHeight = ByteHelper.IntFromBytes(bytes, 42);
-        long mapSize = mapWidth * mapHeight;
-        var mapdata = new int[mapHeight, mapWidth][];
-        long offset = 50;
-
-        for (int w = 0; w < mapWidth; w++)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mapdata">mapdata.bytes</param>
+        /// <returns>int[mapHeight,mapWidth][layerCnt(3)]</returns>
+        public int[,][] ExportMapData(TextAsset rawData)
         {
-            for (int h = 0; h < mapHeight; h++)
+            byte[] bytes = rawData.bytes;
+
+            long offset = 38;
+            int mapWidth = bytes.ToInt(ref offset);
+            int mapHeight = bytes.ToInt(ref offset);
+            long mapSize = mapWidth * mapHeight;
+            var mapdata = new int[mapHeight, mapWidth][];
+            offset = 50;
+
+            for (int w = 0; w < mapWidth; w++)
             {
-                mapdata[h, w] = new int[3];
-                for (int l = 0; l < 3; l++)
+                for (int h = 0; h < mapHeight; h++)
                 {
-                    long tempOffset = offset + mapSize * l * 4;
+                    mapdata[h, w] = new int[3];
+                    for (int l = 0; l < 3; l++)
+                    {
+                        long tempOffset = offset + mapSize * l * 4;
 
-                    mapdata[h, w][l] = ByteHelper.IntFromBytes(bytes, tempOffset);
+                        mapdata[h, w][l] = bytes.ToInt(ref tempOffset);
+                    }
+                    offset += 4;
                 }
-                offset += 4;
             }
-        }
 
-        Debug.Log(mapWidth + " " + mapHeight);
-        return mapdata;
+            Debug.Log(mapWidth + " " + mapHeight);
+            return mapdata;
+        }
     }
 }

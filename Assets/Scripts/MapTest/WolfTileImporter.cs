@@ -18,7 +18,7 @@ using UnityEngine;
 /// オートタイルへのパス 00 ...
 /// ]
 /// の15回繰り返し
-/// FF タイル数(4byte リトルエンディアン)
+/// FF タイル数(4byte リトルエンディアン)，オートタイル(16個分)含む
 /// タイル数分タグ番号設定(タイル数*1byte)
 /// FF タイル数
 /// 進行設定(タイル数*4byte)
@@ -48,60 +48,72 @@ using UnityEngine;
 /// 
 /// </summary>
 
-public class WolfTileImporter
+namespace UniWolf
 {
-
-    // Use this for initialization
-    void Start() {
-
-    }
-
-    // Update is called once per frame
-    void Update() {
-
-    }
-
-    public int[] ExportTileData(TextAsset rawData,
-        out Texture2D mapChip,out List<Texture2D> autoChipList)
+    public class WolfTileImporter
     {
-        byte[] bytes = rawData.bytes;
-        Encoding encoding = Encoding.GetEncoding("Shift_JIS");
+        Encoding encoding;
 
-        int offset = 15;
-        int nameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
-        offset += 4;
-        string tileName = encoding.GetString(
-            ByteHelper.GetBytesRange(bytes, offset, nameLength));
-        Debug.Log(tileName);
-        offset += nameLength + 1;
-
-        int chipNameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
-        offset += 4;
-        string chipPath = encoding.GetString(
-            ByteHelper.GetBytesRange(bytes, offset, chipNameLength));
-        chipPath = chipPath.Replace(".png", "");
-        mapChip = Resources.Load<Texture2D>(chipPath);
-        Debug.Log(chipPath);
-        offset += chipNameLength + 1;
-
-        autoChipList = new List<Texture2D>();
-        for (int i = 0; i < 15; i++)// Read auto chips
+        public WolfTileImporter()
         {
-            int autoNameLength = ByteHelper.IntFromBytes(bytes, offset) - 1;
-            offset += 4;
-            if (autoNameLength > 0)
-            {
-                string autoPath = encoding.GetString(
-                    ByteHelper.GetBytesRange(bytes, offset, autoNameLength));
-                autoPath = autoPath.Replace(".png", "");
-                autoChipList.Add(Resources.Load<Texture2D>(autoPath));
-                Debug.Log(autoNameLength);
-                Debug.Log(autoPath);
-            }
-            offset += autoNameLength + 1;
+            encoding = Encoding.GetEncoding("Shift_JIS");
         }
 
-        return null;
-        //var tileData = new int[][];
+        public int[] ExportTileData(TextAsset rawData,
+            out Texture2D mapChip, out List<Texture2D> autoChipList)
+        {
+            byte[] bytes = rawData.bytes;
+            long offset = 15;
+
+            LoadBaseTileName(bytes, ref offset);
+            mapChip = LoadBaseTileSet(bytes, ref offset);
+            autoChipList = LoadAutochipList(bytes, ref offset);
+
+            return null;
+            //var tileData = new int[][];
+        }
+
+        void LoadBaseTileName(byte[] rawBytes, ref long offset)
+        {
+            int nameLength = rawBytes.ToInt(ref offset) - 1;
+            string tileName = encoding.GetString(
+                rawBytes.GetRange(ref offset, nameLength));
+            offset++;
+        }
+
+        Texture2D LoadBaseTileSet(byte[] rawBytes, ref long offset)
+        {
+            int chipNameLength = rawBytes.ToInt(ref offset) - 1;
+            string chipPath = encoding.GetString(
+                    rawBytes.GetRange(ref offset, chipNameLength));
+            offset++;
+            chipPath = chipPath.Replace(".png", "");
+            Texture2D mapChip = Resources.Load<Texture2D>(chipPath);
+            return mapChip;
+        }
+
+        List<Texture2D> LoadAutochipList(byte[] rawBytes, ref long offset)
+        {
+            List<Texture2D> autoChipList = new List<Texture2D>();
+            for (int i = 0; i < 15; i++)// Read auto chips
+            {
+                int autoNameLength = rawBytes.ToInt(ref offset) - 1;
+                if (autoNameLength > 0)
+                {
+                    string autoPath = encoding.GetString(
+                        rawBytes.GetRange(ref offset, autoNameLength));
+                    autoPath = autoPath.Replace(".png", "");
+                    offset++;
+                    autoChipList.Add(Resources.Load<Texture2D>(autoPath));
+                }
+            }
+            return autoChipList;
+        }
+
+        int[] ImportTagData(byte[] rawBytes, long offset)
+        {
+            int size = rawBytes.ToInt(ref offset);
+            return null;
+        }
     }
 }

@@ -10,8 +10,6 @@ namespace UniWolf
         TextAsset rawTileData;
         [SerializeField]
         TextAsset rawMapData;
-        [SerializeField]
-        Texture2D nullAutoChip;
 
         Texture2D mapChip;
         Texture2D[] autoChips;
@@ -21,9 +19,7 @@ namespace UniWolf
         {
             var tiler = new WolfTileImporter();
             List<Texture2D> autoChipList;
-            tiler.ExportTileData(rawTileData, out mapChip, out autoChipList);
-            autoChipList.Insert(0, nullAutoChip);
-            autoChips = autoChipList.ToArray();
+            tiler.ExportTileData(rawTileData, out mapChip, out autoChips);
 
             var importer = new WolfMapImporter();
             Sprite mapSprite = RenderMap(importer.ExportMapData(rawMapData));

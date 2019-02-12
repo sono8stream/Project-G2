@@ -60,14 +60,17 @@ namespace UniWolf
         }
 
         public int[] ExportTileData(TextAsset rawData,
-            out Texture2D mapChip, out List<Texture2D> autoChipList)
+            out Texture2D mapChip, out Texture2D[] autoChips)
         {
             byte[] bytes = rawData.bytes;
             long offset = 15;
 
             LoadBaseTileName(bytes, ref offset);
             mapChip = LoadBaseTileSet(bytes, ref offset);
-            autoChipList = LoadAutochipList(bytes, ref offset);
+            autoChips = LoadAutoChipList(bytes, ref offset);
+            offset++;
+            int[] tagData = ImportTagData(bytes, ref offset);
+            offset++;
 
             return null;
             //var tileData = new int[][];
@@ -86,15 +89,16 @@ namespace UniWolf
             int chipNameLength = rawBytes.ToInt(ref offset) - 1;
             string chipPath = encoding.GetString(
                     rawBytes.GetRange(ref offset, chipNameLength));
-            offset++;
             chipPath = chipPath.Replace(".png", "");
             Texture2D mapChip = Resources.Load<Texture2D>(chipPath);
+            offset++;
             return mapChip;
         }
 
-        List<Texture2D> LoadAutochipList(byte[] rawBytes, ref long offset)
+        Texture2D[] LoadAutoChipList(byte[] rawBytes, ref long offset)
         {
             List<Texture2D> autoChipList = new List<Texture2D>();
+            autoChipList.Add(Resources.Load<Texture2D>("AutoChips/None"));
             for (int i = 0; i < 15; i++)// Read auto chips
             {
                 int autoNameLength = rawBytes.ToInt(ref offset) - 1;
@@ -103,17 +107,23 @@ namespace UniWolf
                     string autoPath = encoding.GetString(
                         rawBytes.GetRange(ref offset, autoNameLength));
                     autoPath = autoPath.Replace(".png", "");
-                    offset++;
                     autoChipList.Add(Resources.Load<Texture2D>(autoPath));
+                    offset++;
                 }
             }
-            return autoChipList;
+            return autoChipList.ToArray();
         }
 
-        int[] ImportTagData(byte[] rawBytes, long offset)
+        int[] ImportTagData(byte[] rawBytes, ref long offset)
         {
             int size = rawBytes.ToInt(ref offset);
-            return null;
+            int[] tagData = new int[size];
+            for (int i = 0; i < size; i++)
+            {
+                tagData[i] = rawBytes[offset];
+                offset++;
+            }
+            return tagData;
         }
     }
 }

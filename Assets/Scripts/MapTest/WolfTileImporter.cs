@@ -71,9 +71,8 @@ namespace UniWolf
             offset++;
             int[] tagData = ImportTagData(bytes, ref offset);
             offset++;
-
+            TileData[] tileData = ImportTileData(bytes, ref offset, tagData);
             return null;
-            //var tileData = new int[][];
         }
 
         void LoadBaseTileName(byte[] rawBytes, ref long offset)
@@ -124,6 +123,73 @@ namespace UniWolf
                 offset++;
             }
             return tagData;
+        }
+
+        TileData[] ImportTileData(byte[] rawBytes,ref long offset,int[] tagData)
+        {
+            int size = rawBytes.ToInt(ref offset);
+            TileData[] tileData = new TileData[size];
+            for(int i = 0; i < size; i++)
+            {
+                int val = rawBytes.ToInt(ref offset);
+
+            }
+            return tileData;
+        }
+
+        TileData TranslateTileData(int val,int tagNo)
+        {
+            PassStatus pass = CalcPassStatus(val);
+            
+            return new TileData(tagNo,)
+        }
+
+        PassStatus CalcPassStatus(int val)
+        {
+            switch (val)
+            {
+                case 0:
+                    return PassStatus.Pass;
+                case 1 << 4:
+                    return PassStatus.Overlay;
+                case 1 << 6:
+                    return PassStatus.HalfHide;
+                case 1 << 8:
+                    return PassStatus.Hide;
+                case 1 << 9:
+                    return PassStatus.Depend;
+                default:
+                    return PassStatus.Pass;
+            }
+        }
+
+        bool[] CalcPassables(int val)
+        {
+
+        }
+    }
+
+    public enum PassStatus
+    {
+        Pass, Hide, Overlay, Depend, HalfHide
+    }
+
+    public class TileData
+    {
+        public int TagNo { get; }
+        public PassStatus PassSetting { get; }
+        public bool[] Passables { get; }
+        public bool[] CanEnters { get; }
+        public bool IsCounter { get; }
+
+        public TileData(int tagNo, PassStatus passSetting,
+            bool[] canEnters,bool[] passables, bool isCounter)
+        {
+            TagNo = tagNo;
+            PassSetting = passSetting;
+            Passables = passables;
+            CanEnters = canEnters;
+            IsCounter = isCounter;
         }
     }
 }
